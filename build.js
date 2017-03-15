@@ -12,14 +12,28 @@ const ENTRY = `index.js`;
  */
 class Builder {
 
+	constructor() {
+		this._externalDeps = [];
+	}
+
 	build() {
 		return pfs.exists(BUNDLE_FOLDER_NAME)
 			.then(isExists => !isExists ? Builder.makeDirectory(BUNDLE_FOLDER_NAME) : null)
-			.then(() => this._buildApp());
-
+			.then(() => new Promise((fulfill, reject) => this._createBundlerAndFillDepsArray()
+					.once('error', reject)
+					.once('bundle', bundleStream => bundleStream
+						.once('end', fulfill)
+						.on('error', reject)
+					)
+					.bundle()
+				)
+			)
+			.then(() => {
+				console.log(this._externalDeps)
+			});
 	}
 
-	_buildApp() {
+	_createBundler() {
 		return browserify([ENTRY], {
 			cache: {},
 			packageCache: {},
@@ -28,8 +42,14 @@ class Builder {
 			.on('bundle', sourceStream => {
 				const outputStream = fs.createWriteStream(BUNDLE_APP_PATH);
 				sourceStream.pipe(outputStream);
-			})
-			.bundle()
+			});
+	}
+
+	_createBundlerAndFillDepsArray() {
+		return this._createBundler()
+			.on('file', (file, id) => {
+				this._externalDeps.push(file);
+			});
 	}
 }
 
