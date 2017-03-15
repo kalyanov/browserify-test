@@ -1,0 +1,11 @@
+{
+  "name": "browserify-test",
+  "version": "0.0.1",
+  "scripts": {},
+  "dependencies": {
+    "browserify": "^14.1.0",
+    "dependency-tree": "^5.9.0",
+    "mkdirp": "^0.5.1",
+    "timestamp": "0.0.1"
+  }
+}
